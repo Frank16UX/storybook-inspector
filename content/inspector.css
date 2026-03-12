@@ -1,0 +1,40 @@
+/* Element picker overlay */
+#sbi-highlight-overlay {
+  position: fixed;
+  pointer-events: none;
+  z-index: 2147483646;
+  border: 2px solid #4f8ef7;
+  background: rgba(79, 142, 247, 0.1);
+  transition: all 0.05s ease-out;
+  display: none;
+}
+
+/* Tooltip showing tag.class */
+#sbi-highlight-tooltip {
+  position: fixed;
+  z-index: 2147483647;
+  pointer-events: none;
+  background: #1b1f23;
+  color: #e1e4e8;
+  font: 11px/1.4 'SF Mono', Monaco, 'Cascadia Code', monospace;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  display: none;
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#sbi-highlight-tooltip .sbi-tag {
+  color: #79b8ff;
+}
+
+#sbi-highlight-tooltip .sbi-class {
+  color: #b392f0;
+}
+
+#sbi-highlight-tooltip .sbi-dims {
+  color: #6a737d;
+  margin-left: 6px;
+}

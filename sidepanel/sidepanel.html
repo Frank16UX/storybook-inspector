@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Storybook Inspector</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <h1 class="header-title">Storybook Inspector</h1>
+    <button id="btn-pick" class="btn-pick" title="Pick an element">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 1L13 6.5L8 8L6.5 13L3 1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      Pick
+    </button>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="tabs">
+    <button class="tab active" data-tab="element">Element</button>
+    <button class="tab" data-tab="tokens">Tokens</button>
+    <button class="tab" data-tab="compare">Compare</button>
+  </nav>
+
+  <!-- Tab: Element -->
+  <section id="tab-element" class="tab-content active">
+    <div id="element-empty" class="empty-state">
+      <p>Click <strong>Pick</strong> and select an element on the page to inspect its styles.</p>
+    </div>
+    <div id="element-data" class="element-data" style="display:none">
+      <div id="element-selector" class="selector-bar"></div>
+
+      <!-- Typography Card -->
+      <div class="card">
+        <h3 class="card-title">Typography</h3>
+        <div id="typography-grid" class="prop-grid"></div>
+      </div>
+
+      <!-- Colors Card -->
+      <div class="card">
+        <h3 class="card-title">Colors</h3>
+        <div id="colors-grid" class="color-grid"></div>
+      </div>
+
+      <!-- Box Model Card -->
+      <div class="card">
+        <h3 class="card-title">Box Model</h3>
+        <div id="box-model" class="box-model">
+          <div class="box-margin">
+            <span class="box-label">margin</span>
+            <span class="bm-top" id="bm-margin-top">0</span>
+            <span class="bm-right" id="bm-margin-right">0</span>
+            <span class="bm-bottom" id="bm-margin-bottom">0</span>
+            <span class="bm-left" id="bm-margin-left">0</span>
+            <div class="box-border">
+              <span class="box-label">border</span>
+              <span class="bm-top" id="bm-border-top">0</span>
+              <span class="bm-right" id="bm-border-right">0</span>
+              <span class="bm-bottom" id="bm-border-bottom">0</span>
+              <span class="bm-left" id="bm-border-left">0</span>
+              <div class="box-padding">
+                <span class="box-label">padding</span>
+                <span class="bm-top" id="bm-padding-top">0</span>
+                <span class="bm-right" id="bm-padding-right">0</span>
+                <span class="bm-bottom" id="bm-padding-bottom">0</span>
+                <span class="bm-left" id="bm-padding-left">0</span>
+                <div class="box-content">
+                  <span id="bm-content-size">0 × 0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layout Card -->
+      <div class="card">
+        <h3 class="card-title">Layout</h3>
+        <div id="layout-grid" class="prop-grid"></div>
+      </div>
+
+      <!-- CSS Variables Card -->
+      <div class="card" id="css-vars-card" style="display:none">
+        <h3 class="card-title">CSS Variables</h3>
+        <div id="css-vars-grid" class="prop-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tab: Tokens -->
+  <section id="tab-tokens" class="tab-content">
+    <div class="toolbar">
+      <button id="btn-extract" class="btn-primary">Extract All Tokens</button>
+      <button id="btn-export" class="btn-secondary" disabled>Export JSON</button>
+    </div>
+    <div id="tokens-empty" class="empty-state">
+      <p>Click <strong>Extract All Tokens</strong> to scan the page for colors, fonts, sizes, spacing, and CSS variables.</p>
+    </div>
+    <div id="tokens-data" style="display:none">
+      <div class="card" id="token-colors-card">
+        <h3 class="card-title">Colors <span class="badge" id="token-colors-count">0</span></h3>
+        <div id="token-colors" class="color-grid"></div>
+      </div>
+      <div class="card" id="token-fonts-card">
+        <h3 class="card-title">Fonts <span class="badge" id="token-fonts-count">0</span></h3>
+        <div id="token-fonts" class="prop-list"></div>
+      </div>
+      <div class="card" id="token-sizes-card">
+        <h3 class="card-title">Font Sizes <span class="badge" id="token-sizes-count">0</span></h3>
+        <div id="token-sizes" class="prop-list"></div>
+      </div>
+      <div class="card" id="token-spacing-card">
+        <h3 class="card-title">Spacing <span class="badge" id="token-spacing-count">0</span></h3>
+        <div id="token-spacing" class="prop-list"></div>
+      </div>
+      <div class="card" id="token-vars-card">
+        <h3 class="card-title">CSS Variables <span class="badge" id="token-vars-count">0</span></h3>
+        <div id="token-vars" class="prop-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tab: Compare -->
+  <section id="tab-compare" class="tab-content">
+    <div class="compare-input">
+      <label for="scss-input">Paste SCSS variables or upload a file:</label>
+      <textarea id="scss-input" class="scss-textarea" placeholder="$color-primary: #3366ff;&#10;$font-size-base: 16px;&#10;$spacing-md: 24px;"></textarea>
+      <div class="compare-actions">
+        <label class="btn-secondary btn-file">
+          Upload .scss
+          <input type="file" id="scss-file" accept=".scss,.css,.txt" hidden>
+        </label>
+        <button id="btn-compare" class="btn-primary">Compare</button>
+      </div>
+    </div>
+    <div id="compare-empty" class="empty-state">
+      <p>Paste your baseline SCSS variables above, then extract tokens and click <strong>Compare</strong>.</p>
+    </div>
+    <div id="compare-results" style="display:none">
+      <!-- Summary -->
+      <div class="card compare-summary" id="compare-summary"></div>
+      <!-- Matches -->
+      <div class="card" id="compare-matches-card" style="display:none">
+        <h3 class="card-title status-match">Matches <span class="badge bg-green" id="compare-matches-count">0</span></h3>
+        <div id="compare-matches" class="compare-list"></div>
+      </div>
+      <!-- Mismatches -->
+      <div class="card" id="compare-mismatches-card" style="display:none">
+        <h3 class="card-title status-mismatch">Mismatches <span class="badge bg-red" id="compare-mismatches-count">0</span></h3>
+        <div id="compare-mismatches" class="compare-list"></div>
+      </div>
+      <!-- Missing on page -->
+      <div class="card" id="compare-missing-card" style="display:none">
+        <h3 class="card-title status-missing">Missing on Page <span class="badge bg-yellow" id="compare-missing-count">0</span></h3>
+        <div id="compare-missing" class="compare-list"></div>
+      </div>
+      <!-- Extra on page -->
+      <div class="card" id="compare-extra-card" style="display:none">
+        <h3 class="card-title status-extra">Extra on Page <span class="badge bg-blue" id="compare-extra-count">0</span></h3>
+        <div id="compare-extra" class="compare-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <script src="../shared/constants.js"></script>
+  <script src="../shared/scss-parser.js"></script>
+  <script src="../shared/token-comparator.js"></script>
+  <script src="sidepanel.js"></script>
+</body>
+</html>
