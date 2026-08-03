@@ -6,6 +6,9 @@
   const SCSSParser = globalThis.__SBI_SCSSParser;
   const TokenComparator = globalThis.__SBI_TokenComparator;
 
+  // Establish persistent connection so the service worker knows when the panel closes
+  chrome.runtime.connect({ name: 'sidepanel' });
+
   let pickerActive = false;
   let lastTokenData = null;
 
