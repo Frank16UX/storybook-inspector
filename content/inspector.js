@@ -3,13 +3,17 @@
  * Runs in all frames including Storybook's preview iframe.
  */
 (function () {
-  // Guard against double-injection
+  // Guard against double-injection. Truthy build marker — read `__sbiInjected` in the
+  // page console to confirm which version of this script is live in a given frame.
   if (window.__sbiInjected) return;
-  window.__sbiInjected = true;
+  window.__sbiInjected = 'raf-track';
 
   const MSG = globalThis.__SBI_MSG;
   let pickerActive = false;
   let lockedElement = null;
+  let highlightedElement = null;
+  let trackRafId = 0;
+  let lastRectKey = '';
 
   // --- Overlay & Tooltip ---
   const overlay = document.createElement('div');
@@ -20,8 +24,15 @@
   tooltip.id = 'sbi-highlight-tooltip';
   document.documentElement.appendChild(tooltip);
 
-  function positionOverlay(el) {
+  function drawOverlay(el, force) {
     const rect = el.getBoundingClientRect();
+
+    // Bail out unless the geometry actually moved, so the per-frame tracker doesn't
+    // touch the DOM 60 times a second while the page sits still.
+    const rectKey = `${rect.top}|${rect.left}|${rect.width}|${rect.height}`;
+    if (!force && rectKey === lastRectKey) return;
+    lastRectKey = rectKey;
+
     overlay.style.top = rect.top + 'px';
     overlay.style.left = rect.left + 'px';
     overlay.style.width = rect.width + 'px';
@@ -46,8 +57,39 @@
   }
 
   function hideOverlay() {
+    highlightedElement = null;
+    lastRectKey = '';
+    if (trackRafId) {
+      cancelAnimationFrame(trackRafId);
+      trackRafId = 0;
+    }
     overlay.style.display = 'none';
     tooltip.style.display = 'none';
+  }
+
+  /**
+   * Re-measure the highlighted element every frame.
+   *
+   * Listening for `scroll` is not enough: the rect also moves on nested container
+   * scrolls, sticky/animated layout, browser zoom, and — in Storybook — when the
+   * preview iframe itself shifts inside its parent, which fires no scroll event in
+   * this frame at all. Re-measuring is a single getBoundingClientRect() per frame,
+   * and drawOverlay() no-ops unless the geometry changed.
+   */
+  function trackOverlay() {
+    trackRafId = requestAnimationFrame(trackOverlay);
+    if (!highlightedElement) return;
+    if (!highlightedElement.isConnected) {
+      hideOverlay();
+      return;
+    }
+    drawOverlay(highlightedElement, false);
+  }
+
+  function positionOverlay(el) {
+    highlightedElement = el;
+    drawOverlay(el, true);
+    if (!trackRafId) trackOverlay();
   }
 
   // --- Style Extraction ---
@@ -299,10 +341,14 @@
 
       case 'ACTIVATE_PICKER':
         activatePicker();
+        // Always acknowledge: an unanswered message closes the port, which sets
+        // lastError in the service worker and used to trigger a redundant re-injection.
+        sendResponse({ ok: true });
         break;
 
       case 'DEACTIVATE_PICKER':
         deactivatePicker();
+        sendResponse({ ok: true });
         break;
 
       case 'EXTRACT_TOKENS':
@@ -311,6 +357,7 @@
           const tokens = extractAllTokens();
           chrome.runtime.sendMessage({ type: 'TOKEN_DATA', data: tokens });
         }
+        sendResponse({ ok: true });
         break;
     }
   });
